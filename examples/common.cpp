@@ -816,7 +816,7 @@ int vad_simple_int(std::vector<float> & pcmf32, int sample_rate, int last_ms, fl
     }
 
 	// speech started
-    if (vad_start_thold && energy_last > vad_start_thold) 
+    if ( energy_last > vad_start_thold) 
 	{
 		if (verbose) printf("[speech started!]: energy_last > %f\n", vad_start_thold);
 		return 1;

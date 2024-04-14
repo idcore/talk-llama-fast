@@ -12,6 +12,7 @@
 /xtts/speakers/**
 /xtts_models/**
 /xtts/xtts_models/**
+/SillyTavern-Extras/**
 
 # models and other stuff
 Makefile_old
