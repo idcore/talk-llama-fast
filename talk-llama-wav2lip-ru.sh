@@ -1,0 +1,2 @@
+#!/bin/bash
+./talk-llama -mw ggml-medium-q5_0.bin -ml mistral-7b-instruct-v0.2.Q5_0.gguf --language ru -p "Ivan" --speak speak --vad-last-ms 200 --vad-start-thold 0.000270 --bot-name "Anna" --xtts-voice "Анна" --prompt-file assistant_ru.txt  --temp 0.10 --ctx_size 2000  --multi-chars --allow-newline --stop-words "Ivan:;ivan:;---;ИВАН" -ngl 99 -n 160 --threads 4 --split-after 1 --sleep-before-xtts 1000

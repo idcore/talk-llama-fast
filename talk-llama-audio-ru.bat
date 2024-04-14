@@ -1,0 +1,2 @@
+talk-llama.exe -mw ggml-medium-q5_0.bin -ml mistral-7b-instruct-v0.2.Q5_0.gguf --language ru --speak speak  --vad-thold 0.50 --vad-last-ms 400 --vad-start-thold 0.000270 -p "Ivan" --bot-name "Anna" --prompt-file assistant_ru.txt --ctx_size 2000 -n 150 --xtts-voice emma_1 --xtts-url http://localhost:8020/ --multi-chars --allow-newline --xtts-intro --temp 0.10  --repeat_last_n 256 --repeat_penalty 1.10
+pause 

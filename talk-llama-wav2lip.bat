@@ -1,0 +1,2 @@
+talk-llama.exe -mw ggml-medium.en-q5_0.bin -ml mistral-7b-instruct-v0.2.Q5_0.gguf -p "Alex" --speak speak --vad-last-ms 200 --vad-start-thold 0.000270 --bot-name "Anna" --prompt-file assistant.txt --temp 1.15 --ctx_size 3548  --multi-chars --allow-newline --seqrep --stop-words Aleks:;alex:;---;ALex -ngl 99 -n 60 --threads 4 --split-after 5 --sleep-before-xtts 1000
+pause

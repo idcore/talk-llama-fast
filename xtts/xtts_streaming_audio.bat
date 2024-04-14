@@ -1,0 +1,4 @@
+call conda activate extras
+python -m xtts_api_server -d=cuda --deepspeed --streaming-mode --stream-play-sync
+call conda deactivate
+pause

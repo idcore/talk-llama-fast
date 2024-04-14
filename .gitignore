@@ -8,6 +8,16 @@
 .DS_Store
 
 **.pth
+/examples_bad/**
+/xtts/speakers/**
+/xtts_models/**
+/xtts/xtts_models/**
+
+# models and other stuff
+Makefile_old
+install_extras.sh
+/**.gguf
+/**.bin
 
 build/
 build-coreml/
