@@ -120,6 +120,13 @@ struct whisper_params {
 void whisper_print_usage(int argc, char ** argv, const whisper_params & params);
 
 bool whisper_params_parse(int argc, char ** argv, whisper_params & params) {
+    std::cout << "Command-line arguments received:" << std::endl;
+	std::setlocale(LC_ALL, "C");
+	
+    for (int i = 0; i < argc; ++i) {
+        std::cout << "argv[" << i << "]: " << argv[i] << std::endl;
+    }
+
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
 
@@ -358,7 +365,7 @@ std::string getTempDir() {
     // } else {
     //     return path_buf;
     // }
-    return "/tmp";
+    return "/tmp/";
 }
 
 // OLD
@@ -1201,6 +1208,7 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 					//audio.get((int)(speech_len*1000), pcmf32_cur);					
 					printf("%.3f after vad-start, before pre transcribe (%d), size:(%d)\n", get_current_time_ms(), pcmf32_cur.size());
                     all_heard_pre = ::trim(::transcribe(ctx_wsp, params, pcmf32_cur, prompt_whisper, prob0, t_ms));	// try with small size audio
+					printf("last heard phrase:%s", all_heard_pre);
 					printf("%.3f after pre transcribe (%d), size:(%d)\n", get_current_time_ms(), pcmf32_cur.size());	
 				}
 				// user has started speaking, xtts cannot play
