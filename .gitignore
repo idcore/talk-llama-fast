@@ -8,17 +8,20 @@
 .DS_Store
 
 **.pth
-/examples_bad/**
-/xtts/speakers/**
-/xtts_models/**
-/xtts/xtts_models/**
-/SillyTavern-Extras/**
+
 
 # models and other stuff
 Makefile_old
 install_extras.sh
 /**.gguf
 /**.bin
+
+/examples_bad/**
+/xtts/speakers/**
+/xtts_models/**
+/xtts/xtts_models/**
+/SillyTavern-Extras/**
+/xtts-api-server/**
 
 build/
 build-coreml/

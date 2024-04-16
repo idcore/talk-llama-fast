@@ -37,11 +37,13 @@ endif
 #
 # Compile flags
 #
+WHISPER_CUDA := 1
 
 # CFLAGS   = -I.              -O3 -DNDEBUG -std=c11   -fPIC
 # CXXFLAGS = -I. -I./examples -O3 -DNDEBUG -std=c++11 -fPIC
 CFLAGS   = -I.              -O3 -DNDEBUG -std=c11   -fPIC
 CXXFLAGS = -I. -I./examples -O0 -DNDEBUG -std=c++14 -fPIC -Wformat=1 -Wno-deprecated-declarations -g 
+#CXXFLAGS = -I. -I./examples -O3 -DNDEBUG -std=c++14 -fPIC -Wformat=1 -Wno-deprecated-declarations 
 
 LDFLAGS  =
 

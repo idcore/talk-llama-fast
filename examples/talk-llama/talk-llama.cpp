@@ -122,7 +122,7 @@ void whisper_print_usage(int argc, char ** argv, const whisper_params & params);
 bool whisper_params_parse(int argc, char ** argv, whisper_params & params) {
     std::cout << "Command-line arguments received:" << std::endl;
 	std::setlocale(LC_ALL, "C");
-	
+
     for (int i = 0; i < argc; ++i) {
         std::cout << "argv[" << i << "]: " << argv[i] << std::endl;
     }
@@ -193,7 +193,7 @@ bool whisper_params_parse(int argc, char ** argv, whisper_params & params) {
             exit(0);
         }
     }
-
+	std::setlocale(LC_ALL, "en_US.UTF-8");
     return true;
 }
 
@@ -254,15 +254,52 @@ void whisper_print_usage(int /*argc*/, char ** argv, const whisper_params & para
 }
 
 // returns seconds since epoch with milliseconds. e.g. 15244.575 (15244 s and 575 ms)
-float get_current_time_ms() {
-    auto now = std::chrono::high_resolution_clock::now();
+// float get_current_time_ms() {
+//     auto now = std::chrono::high_resolution_clock::now();
 
-    // Convert to milliseconds since the Unix epoch
-    auto duration = now.time_since_epoch();
-    float millis = (float)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 1000;
+//     // Convert to milliseconds since the Unix epoch
+//     auto duration = now.time_since_epoch();
+//     float millis = (float)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 1000;
 	
-	return millis;
+// 	return millis;
+// }
+
+
+// int main()
+// {
+//     typedef std::chrono::high_resolution_clock Time;
+//     typedef std::chrono::milliseconds ms;
+//     typedef std::chrono::duration<float> fsec;
+//     auto t0 = Time::now();
+//     auto t1 = Time::now();
+//     fsec fs = t1 - t0;
+//     ms d = std::chrono::duration_cast<ms>(fs);
+//     std::cout << fs.count() << "s\n";
+//     std::cout << d.count() << "ms\n";
+// }
+
+// // from LLM
+
+static std::chrono::steady_clock::time_point start_time;
+
+float get_current_time_ms() {
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed_time = now - start_time;
+    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();
+    return static_cast<float>(millis) / 1000.0f;
 }
+
+// float get_current_time_ms() {
+//     typedef std::chrono::high_resolution_clock Time;
+//     typedef std::chrono::milliseconds ms;
+// 	typedef std::chrono::duration<float, std::milli> duration;
+
+//     auto now = Time::now();
+//     duration elapsed = now.time_since_epoch();
+// 	return elapsed.count() / 1000.0f;
+// }
+
+
 
 std::string transcribe(
         whisper_context * ctx,
@@ -834,7 +871,9 @@ The transcript only includes text, it does not include markup like HTML and Mark
 {0}{4})";
 
 int run(int argc, char ** argv) {
-	
+	// Global variable to store the start time
+	start_time = std::chrono::steady_clock::now();
+
 	whisper_params params;
 	std::vector<std::thread> threads;
 	std::thread t;
@@ -1077,7 +1116,7 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
     bool need_to_save_session = !path_session.empty() && n_matching_session_tokens < (embd_inp.size() * 3 / 4);
 
     //printf("params.vad_start_thold: %f\n", params.vad_start_thold);
-    printf("%s : done! start speaking in the microphone\n", __func__);
+    printf("%s : done! \nStart speaking in the microphone\n", __func__);
 
     // show wake command if enabled
     const std::string wake_cmd = params.wake_cmd;
@@ -1118,6 +1157,8 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 	std::string rand_intro_text = "";
 	std::string last_output_buffer = "";
 	std::string last_output_needle = "";
+
+
 	if (params.language == "ru")
 	{
 		tts_intros = {"Хм", "Ну", "Нуу", "О", "А", "А?", "Угу", "Ох", "Ха", "Ах", "Блин", "Короче", "В общем", "Ой", "Слышь", "Ну вообще-то", "Ну а вообще", "Кароче", "Вот", "Знаешь", "Как бы", "Прикинь", "Послушай", "Типа", "Это", "Так вот", "Погоди", params.person};
@@ -1173,6 +1214,9 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 	int llama_interrupted = 0;
 	float llama_interrupted_time = 0.0;
 	float llama_start_time = 0.0;
+	// Set locale to support Unicode characters
+    std::setlocale(LC_ALL, "en_US.UTF-8");
+
 
     // main loop
     while (is_running) {
@@ -1195,9 +1239,9 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 			// vad_last_ms default 1250
 			
 			int vad_result = ::vad_simple_int(pcmf32_cur, WHISPER_SAMPLE_RATE, params.vad_last_ms, params.vad_thold, params.freq_thold, params.print_energy, params.vad_start_thold);			
-			if (vad_result == 1 && params.vad_start_thold) // speech started
+			if ( vad_result == 1 && ( params.vad_start_thold > 0.0f )) // speech started
 			{
-                printf("Vad detected\n");
+                printf("\nVad detected\n");
 				if (vad_result_prev != 1) // real start
 				{					
                     printf("Speech started\n");
@@ -1206,20 +1250,22 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 					
 					// whisper warmup request
 					//audio.get((int)(speech_len*1000), pcmf32_cur);					
-					printf("%.3f after vad-start, before pre transcribe (%d), size:(%d)\n", get_current_time_ms(), pcmf32_cur.size());
+					printf("%.3f after vad-start, before pre transcribe (%d), size:(%f)\n", get_current_time_ms(), pcmf32_cur.size());
                     all_heard_pre = ::trim(::transcribe(ctx_wsp, params, pcmf32_cur, prompt_whisper, prob0, t_ms));	// try with small size audio
-					printf("last heard phrase:%s", all_heard_pre);
-					printf("%.3f after pre transcribe (%d), size:(%d)\n", get_current_time_ms(), pcmf32_cur.size());	
+					
+					printf("%.3f after pre transcribe (%d), size:(%f)\n", get_current_time_ms(), pcmf32_cur.size());	
 				}
 				// user has started speaking, xtts cannot play
 				allow_xtts_file(params.xtts_control_path, 0);
 			}		
             if (vad_result >= 2 && vad_result_prev == 1 || force_speak)  // speech ended
 			{
+				allow_xtts_file(params.xtts_control_path, 1);
 				speech_end_ms = get_current_time_ms(); // float in seconds.ms
 				speech_len = speech_end_ms - speech_start_ms;
 				if (speech_len < 0.10) speech_len = 0;
-				else if (speech_len > 10.0) speech_len = 0;
+				else if (speech_len > 10.0) speech_len = 10.0;
+				printf("Speech ended, speech length: %.3f\n",speech_len);
 				//printf("%.3f found vad length: %.2f\n", get_current_time_ms(), speech_len);
 				//len_in_samples = (int)(WHISPER_SAMPLE_RATE * speech_len);
 				//if (len_in_samples && len_in_samples < pcmf32_cur.size())
@@ -1257,7 +1303,8 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
                         text_heard += words[i] + " ";
                     }
                 }
-				if (params.print_energy) fprintf(stdout, " [text_heard: (%s)]\n", text_heard.c_str());
+				// if (params.print_energy) 
+				fprintf(stderr, " [text_heard: (%s)]\n", text_heard.c_str());
 				
 
                 // check if audio starts with the wake-up command if enabled
@@ -1738,7 +1785,7 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
                         if (id != llama_token_eos(model_llama)) {
                             // add it to the context
                             embd.push_back(id);
-out_token_str = llama_token_to_piece(ctx_llama, id);
+							out_token_str = llama_token_to_piece(ctx_llama, id);
                             text_to_speak += out_token_str;
                             //printf("[%d: %s] ", new_tokens, out_token_str.c_str());
                             printf("%s", out_token_str.c_str());
