@@ -6,6 +6,7 @@ DISCLAIMER: this project have no plans for active development
 
 Use installation instructions from original repo above. Then follow additional steps for linux:
 
+0. put llama.cpp model weights in gguf format to ./llm_weights and adapt model path in ./talk-llama-wav2lip-ru.sh
 1. build executable talk-llama:
 1.a. WHISPER_CUDA=1 make clean talk-llama (if u have cuda capable gpu and cuda toolkit installed)
 1.b  make clean talk-llama (if u have not gpu)
