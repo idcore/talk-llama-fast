@@ -330,7 +330,7 @@ std::string transcribe(
     wparams.single_segment   = true;
     wparams.max_tokens       = params.max_tokens;
     wparams.language         = params.language.c_str();
-    wparams.n_threads        = params.n_threads;
+    wparams.n_threads        = 4; //params.n_threads;
 
     wparams.prompt_tokens    = prompt_tokens.empty() ? nullptr : prompt_tokens.data();
     wparams.prompt_n_tokens  = prompt_tokens.empty() ? 0       : prompt_tokens.size();
@@ -763,11 +763,19 @@ std::string find_name(const std::string& str) {
 void send_tts_async(std::string text, std::string speaker_wav="emma_1", std::string language="en", std::string tts_url="http://localhost:8020/", int reply_part=0)
 {
 	// remove text between parentheses using regex
-	if (text[0] == '(' && text[text.size()-1] != ')') text=+")"; // missing )
-	else if (text[0] != '(' && text[text.size()-1] == ')') text="("+text; // missing (
-	std::regex paren_regex(R"(\([^()]*\))"); // Raw string literal for regex pattern
-    text = std::regex_replace(text, paren_regex, "");
-	
+	if (text[0] == '(' && text[text.size()-1] != ')')
+	 text=+")"; // missing )
+	else if (text[0] != '(' && text[text.size()-1] == ')') 
+		text="("+text; // missing (
+	try {
+		std::regex paren_regex(R"(\([^()]*\))"); // Raw string literal for regex pattern
+		text = std::regex_replace(text, paren_regex, "");
+	}
+	catch (const std::regex_error& e) {
+		std::cerr << "Regular expression error: " << e.what() << std::endl;
+		std::cerr <<  text << std::endl;
+	}
+
 	trim(text);
 	text = ::replace(text, "...", ".");
 	text = ::replace(text, "..", ".");
@@ -1327,24 +1335,52 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 
                 // remove text between brackets using regex
                 {
-                    std::regex re("\\[.*?\\]");
+					try {
+                    std::regex re( "\\[.*?\\]");
                     text_heard = std::regex_replace(text_heard, re, "");
+					}
+						catch (const std::regex_error& e) {
+						std::cerr << "Regular expression error: " << e.what() << std::endl;
+						std::cerr <<  text_heard << std::endl;
+	}
+
+					
                 }
 
                 // remove text between brackets using regex
                 {
+					try {
                     std::regex re("\\(.*?\\)");
                     text_heard = std::regex_replace(text_heard, re, "");
+					}
+						catch (const std::regex_error& e) {
+						std::cerr << "Regular expression error: " << e.what() << std::endl;
+						std::cerr <<  text_heard << std::endl;
+					}
+
                 }
 
                 // remove all characters, except for letters, numbers, punctuation and ':', '\'', '-', ' '
-                if (params.language == "en") text_heard = std::regex_replace(text_heard, std::regex("[^a-zA-Z0-9\\.,\\?!\\s\\:\\'\\-]"), ""); // breaks non latin text, e.g. Russian
+                if (params.language == "en")
+					try {
+					text_heard = std::regex_replace(text_heard, std::regex("[^a-zA-Z0-9\\.,\\?!\\s\\:\\'\\-]"), ""); // breaks non latin text, e.g. Russian
+					}
+					catch (const std::regex_error& e) {
+							std::cerr << "Regular expression error: " << e.what() << std::endl;
+							std::cerr <<  text_heard << std::endl;
+						}
                 // take first line
                 text_heard = text_heard.substr(0, text_heard.find_first_of('\n'));
 
                 // remove leading and trailing whitespace
-                text_heard = std::regex_replace(text_heard, std::regex("^\\s+"), "");
-                text_heard = std::regex_replace(text_heard, std::regex("\\s+$"), "");
+				try {
+					text_heard = std::regex_replace(text_heard, std::regex("^\\s+"), "");
+					text_heard = std::regex_replace(text_heard, std::regex("\\s+$"), "");
+				}
+				catch (const std::regex_error& e) {
+						std::cerr << "Regular expression error: " << e.what() << std::endl;
+						std::cerr <<  text_heard << std::endl;
+					}				
 
 				// misheard text, sometimes whisper is hallucinating
 				text_heard = RemoveTrailingCharacters(text_heard, '!');
@@ -1356,7 +1392,14 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 				if (text_heard[0] == '!') text_heard.erase(0, 1);
 				trim(text_heard);
 				if (text_heard == "!" || text_heard == "." || text_heard == "Sil" || text_heard == "Bye" || text_heard == "Okay" || text_heard == "Okay." || text_heard == "Thank you." || text_heard == "Thank you" || text_heard == "Thanks." || text_heard == "Bye." || text_heard == "Thank you for listening." || text_heard == "К" || text_heard == "Спасибо" || text_heard == "Пока" || text_heard == params.bot_name || text_heard == "*Звук!*" || text_heard == "Р" || text_heard.find("Редактор субтитров")!= std::string::npos || text_heard.find("можешь это сделать")!= std::string::npos || text_heard.find("Как дела?")!= std::string::npos || text_heard.find("Это")!= std::string::npos || text_heard.find("Добро пожаловать")!= std::string::npos || text_heard.find("Спасибо за внимание")!= std::string::npos || text_heard.find("Будьте здоровы")!= std::string::npos || text_heard.find("Продолжение следует")!= std::string::npos || text_heard.find("End of")!= std::string::npos || text_heard.find("The End")!= std::string::npos || text_heard.find("THE END")!= std::string::npos || text_heard.find("The film was made")!= std::string::npos || text_heard.find("Translated by")!= std::string::npos || text_heard.find("Thanks for watching")!= std::string::npos || text_heard.find("The second part of the video")!= std::string::npos || text_heard.find("Thank you for watching")!= std::string::npos || text_heard.find("*click*")!= std::string::npos || text_heard.find("Субтитры")!= std::string::npos || text_heard.find("До свидания")!= std::string::npos || text_heard.find("До новых встреч")!= std::string::npos || text_heard.find("ПЕСНЯ")!= std::string::npos || text_heard.find("Silence")!= std::string::npos || text_heard.find("Поехали")!= std::string::npos || text_heard == "You're" || text_heard == "you're" || text_heard == "You're not" || text_heard == "See?" || text_heard == "you" || text_heard == "You" || text_heard == "Yeah" || text_heard == "Well" || text_heard == "Hey" || text_heard == "Oh" || text_heard == "Right" || text_heard == "Real" || text_heard == "Huh" || text_heard == "I" || text_heard == "I'm" || text_heard.find("*звук!")!= std::string::npos) text_heard = "";
-				text_heard = std::regex_replace(text_heard, std::regex("\\s+$"), ""); // trailing whitespace
+
+				try {				
+					text_heard = std::regex_replace(text_heard, std::regex("\\s+$"), ""); // trailing whitespace
+				}
+				catch (const std::regex_error& e) {
+						std::cerr << "Regular expression error: " << e.what() << std::endl;
+						std::cerr <<  text_heard << std::endl;
+					}						
 
 				
 				//printf("Number of tokens in embd: %zu\n", embd.size());
@@ -1989,7 +2032,9 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 							// multiple character names for xtts
 							if (params.multi_chars && last_output.size()>=4)
 							{
+								try{
 								last_output = ::replace(last_output, " ???", ""); // there's a crash with regex, not sure why, todo 
+
 								last_output = ::replace(last_output, " ??", "");
 								last_output = ::replace(last_output, " ?", "");
 								last_output = ::replace(last_output, " !!!", "");
@@ -2003,10 +2048,16 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 								last_output = ::replace(last_output, "...", "");
 								last_output = ::replace(last_output, "(", "");
 								last_output = ::replace(last_output, ")", "");
-								
+								}
+								catch (const std::regex_error& e) {
+										std::cerr << "Regular expression error: " << e.what() << std::endl;
+										std::cerr <<  last_output << std::endl;
+									}									
 								// new char found, will use its voice in Tts
-								std::smatch matches;							
+								std::smatch matches;	
+								try {
 								std::regex r("\n([^:]*):", std::regex::icase | std::regex::optimize);
+
 								if (std::regex_search(last_output, matches, r) && !matches.empty() && matches.size() >= 2 && !matches[1].str().empty() && matches[1].str() != params.person && matches[1].str() != " \n"+params.person) 
 								{
 									current_voice_tmp = matches[1].str();
@@ -2021,6 +2072,12 @@ if (llama_eval(ctx_llama, embd_inp.data(), embd_inp.size(), 0)) {
 										text_to_speak = std::regex_replace(text_to_speak, regEx, "");
 									}									
 								}
+								}
+								catch (const std::regex_error& e) {
+										std::cerr << "Regular expression error: " << e.what() << std::endl;
+										std::cerr <<  text_heard << std::endl;
+									}									
+								
 							}
 							
 							// stop words

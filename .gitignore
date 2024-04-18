@@ -22,6 +22,8 @@ install_extras.sh
 /xtts/xtts_models/**
 /SillyTavern-Extras/**
 /xtts-api-server/**
+/llm_weights/**
+/tried_llms.txt
 
 build/
 build-coreml/
